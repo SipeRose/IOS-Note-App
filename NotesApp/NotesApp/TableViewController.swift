@@ -27,10 +27,7 @@ class TableViewController: UITableViewController {
             }
             navigationItem.leftBarButtonItem?.tintColor = themeColor
             if !notes.isEmpty {
-                for cell in tableView.visibleCells {
-                    cell.layer.borderColor = themeColor.cgColor
-                    cell.textLabel?.textColor = themeColor
-                }
+                tableView.reloadData()
             }
         }
     }
@@ -94,7 +91,9 @@ extension TableViewController {
             "Orange": .orange,
             "Magenta": .magenta,
             "Indigo": .systemIndigo,
-            "Mint": .systemMint
+            "Mint": .systemMint,
+            "Pink": .systemPink,
+            "Yellow": .yellow
         ]
         
         let defaults = UserDefaults.standard
@@ -139,6 +138,14 @@ extension TableViewController {
             self?.themeColor = .systemMint
             self?.saveTheColor(color: "Mint")
         }))
+        ac.addAction(UIAlertAction(title: "Pink", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .systemPink
+            self?.saveTheColor(color: "Pink")
+        }))
+        ac.addAction(UIAlertAction(title: "Yellow", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .yellow
+            self?.saveTheColor(color: "Yellow")
+        }))
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(ac, animated: true)
     }
@@ -180,7 +187,11 @@ extension TableViewController {
             let newNote = Note(title: title, body: "", noteID: noteID)
             self?.notes.append(newNote)
             self?.saveNewNote()
+            if let _ = self {
+                self!.tableView(self!.tableView, didSelectRowAt: IndexPath(row: self!.notes.count - 1, section: 0))
+            }
         }))
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(ac, animated: true)
     }
     
@@ -201,10 +212,19 @@ extension TableViewController {
     
     @objc private func clearAll() {
         if !self.notes.isEmpty {
-            self.notes.removeAll()
-            let ac = UIAlertController(title: nil, message: "All notes were deleted", preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            let ac = UIAlertController(title: "Confirm", message: "Are you sure?", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Confirm", style: .cancel, handler: { [weak self] _ in
+                self?.confirmDeleting()
+            }))
+            ac.addAction(UIAlertAction(title: "Cancel", style: .default))
             present(ac, animated: true)
         }
+    }
+    
+    private func confirmDeleting() {
+        self.notes.removeAll()
+        let ac = UIAlertController(title: nil, message: "All notes were deleted", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
 }

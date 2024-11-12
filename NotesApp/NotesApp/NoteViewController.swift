@@ -14,13 +14,20 @@ class NoteViewController: UIViewController {
     var noteID: String!
     @IBOutlet var textView: UITextView!
     
+    var timer: Timer!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         viewAndNavBarSettings()
         textViewSettings()
         makeToolbarItem()
         notificationCenterObserversForKeyboard()
-        addTapGestureToHideKeyboard()
+        addGestureAndSwipeToHideKeyboard()
+        makeTimerForAutoSaving()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        timer.invalidate()
     }
 }
 
@@ -38,6 +45,23 @@ extension NoteViewController {
         textView.layer.borderColor = themeColor.cgColor
         textView.layer.borderWidth = 3
         textView.layer.cornerRadius = 10
+    }
+    
+    private func makeTimerForAutoSaving() {
+        self.timer = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(autoSaving), userInfo: nil, repeats: true)
+    }
+    
+    @objc private func autoSaving() {
+        if textView.text != body {
+            body = textView.text
+            if let vc = navigationController?.viewControllers.first as? TableViewController {
+                for (index, note) in vc.notes.enumerated() {
+                    if note.noteID == self.noteID {
+                        vc.notes[index].body = self.body
+                    }
+                }
+            }
+        }
     }
     
     private func makeToolbarItem() {
@@ -120,8 +144,12 @@ extension NoteViewController {
         textView.scrollRangeToVisible(selectedRange)
     }
     
-    private func addTapGestureToHideKeyboard() {
+    private func addGestureAndSwipeToHideKeyboard() {
         let tapGesture = UITapGestureRecognizer(target: view, action: #selector(view.endEditing))
+        let swipeDown = UISwipeGestureRecognizer(target: view, action: #selector(view.endEditing))
+        swipeDown.direction = .down
+        
         view.addGestureRecognizer(tapGesture)
+        view.addGestureRecognizer(swipeDown)
     }
 }
