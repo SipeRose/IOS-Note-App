@@ -9,9 +9,12 @@ import UIKit
 
 class NoteViewController: UIViewController {
     
+    var themeColor: UIColor!
     var body: String = ""
     var noteID: String!
     @IBOutlet var textView: UITextView!
+    
+    var timer: Timer!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,7 +22,12 @@ class NoteViewController: UIViewController {
         textViewSettings()
         makeToolbarItem()
         notificationCenterObserversForKeyboard()
-        addTapGestureToHideKeyboard()
+        addGestureAndSwipeToHideKeyboard()
+        makeTimerForAutoSaving()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        timer.invalidate()
     }
 }
 
@@ -27,16 +35,33 @@ extension NoteViewController {
     
     private func viewAndNavBarSettings() {
         view.backgroundColor = .black
-        self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.green]
+        self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: themeColor!]
     }
     
     private func textViewSettings() {
         textView.backgroundColor = .black
-        textView.textColor = .green
+        textView.textColor = themeColor
         textView.text = body
-        textView.layer.borderColor = UIColor.green.cgColor
+        textView.layer.borderColor = themeColor.cgColor
         textView.layer.borderWidth = 3
         textView.layer.cornerRadius = 10
+    }
+    
+    private func makeTimerForAutoSaving() {
+        self.timer = Timer.scheduledTimer(timeInterval: 5, target: self, selector: #selector(autoSaving), userInfo: nil, repeats: true)
+    }
+    
+    @objc private func autoSaving() {
+        if textView.text != body {
+            body = textView.text
+            if let vc = navigationController?.viewControllers.first as? TableViewController {
+                for (index, note) in vc.notes.enumerated() {
+                    if note.noteID == self.noteID {
+                        vc.notes[index].body = self.body
+                    }
+                }
+            }
+        }
     }
     
     private func makeToolbarItem() {
@@ -45,10 +70,10 @@ extension NoteViewController {
         let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareTheNote))
         let clearButton = UIBarButtonItem(title: "Clear", style: .plain, target: self, action: #selector(clearTheTextField))
-        deleteButton.tintColor = .green
-        saveButton.tintColor   = .green
-        shareButton.tintColor  = .green
-        clearButton.tintColor  = .green
+        deleteButton.tintColor = themeColor
+        saveButton.tintColor   = themeColor
+        shareButton.tintColor  = themeColor
+        clearButton.tintColor  = themeColor
         toolbarItems = [shareButton, spacer, deleteButton, clearButton, spacer, saveButton]
         navigationController?.isToolbarHidden = false
     }
@@ -119,8 +144,12 @@ extension NoteViewController {
         textView.scrollRangeToVisible(selectedRange)
     }
     
-    private func addTapGestureToHideKeyboard() {
+    private func addGestureAndSwipeToHideKeyboard() {
         let tapGesture = UITapGestureRecognizer(target: view, action: #selector(view.endEditing))
+        let swipeDown = UISwipeGestureRecognizer(target: view, action: #selector(view.endEditing))
+        swipeDown.direction = .down
+        
         view.addGestureRecognizer(tapGesture)
+        view.addGestureRecognizer(swipeDown)
     }
 }
