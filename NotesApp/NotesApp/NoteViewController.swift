@@ -9,6 +9,7 @@ import UIKit
 
 class NoteViewController: UIViewController {
     
+    var themeColor: UIColor!
     var body: String = ""
     var noteID: String!
     @IBOutlet var textView: UITextView!
@@ -27,14 +28,14 @@ extension NoteViewController {
     
     private func viewAndNavBarSettings() {
         view.backgroundColor = .black
-        self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.green]
+        self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: themeColor!]
     }
     
     private func textViewSettings() {
         textView.backgroundColor = .black
-        textView.textColor = .green
+        textView.textColor = themeColor
         textView.text = body
-        textView.layer.borderColor = UIColor.green.cgColor
+        textView.layer.borderColor = themeColor.cgColor
         textView.layer.borderWidth = 3
         textView.layer.cornerRadius = 10
     }
@@ -45,10 +46,10 @@ extension NoteViewController {
         let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareTheNote))
         let clearButton = UIBarButtonItem(title: "Clear", style: .plain, target: self, action: #selector(clearTheTextField))
-        deleteButton.tintColor = .green
-        saveButton.tintColor   = .green
-        shareButton.tintColor  = .green
-        clearButton.tintColor  = .green
+        deleteButton.tintColor = themeColor
+        saveButton.tintColor   = themeColor
+        shareButton.tintColor  = themeColor
+        clearButton.tintColor  = themeColor
         toolbarItems = [shareButton, spacer, deleteButton, clearButton, spacer, saveButton]
         navigationController?.isToolbarHidden = false
     }

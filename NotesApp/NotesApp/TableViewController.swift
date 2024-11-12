@@ -19,11 +19,27 @@ class TableViewController: UITableViewController {
             }
         }
     }
+    var themeColor: UIColor! {
+        didSet {
+            self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: themeColor!]
+            for button in navigationItem.rightBarButtonItems! {
+                button.tintColor = themeColor
+            }
+            navigationItem.leftBarButtonItem?.tintColor = themeColor
+            if !notes.isEmpty {
+                for cell in tableView.visibleCells {
+                    cell.layer.borderColor = themeColor.cgColor
+                    cell.textLabel?.textColor = themeColor
+                }
+            }
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         viewAndBarSettings()
         parseJSON()
+        downloadTheColor()
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -34,8 +50,8 @@ class TableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = notes[indexPath.row].title
         cell.backgroundColor = .black
-        cell.textLabel?.textColor = .green
-        cell.layer.borderColor = UIColor.green.cgColor
+        cell.textLabel?.textColor = themeColor
+        cell.layer.borderColor = themeColor.cgColor
         cell.layer.borderWidth = 3
         return cell
     }
@@ -45,6 +61,7 @@ class TableViewController: UITableViewController {
             vc.noteID = notes[indexPath.row].noteID
             vc.title  = notes[indexPath.row].title
             vc.body   = notes[indexPath.row].body
+            vc.themeColor = self.themeColor
             navigationController?.pushViewController(vc, animated: true)
         }
     }
@@ -58,10 +75,77 @@ extension TableViewController {
         title = "My notes"
         self.navigationController!.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.green]
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewNote))
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewNote))
+        let chooseColorButton = UIBarButtonItem(title: "Color", style: .plain, target: self, action: #selector(chooseThemeColor))
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Clear all", image: nil, target: self, action: #selector(clearAll))
-        navigationItem.rightBarButtonItem?.tintColor = .green
+        navigationItem.rightBarButtonItems = [addButton, chooseColorButton]
+        addButton.tintColor = .green
+        chooseColorButton.tintColor = .green
         navigationItem.leftBarButtonItem?.tintColor = .green
+    }
+    
+    private func downloadTheColor() {
+        
+        let colorDict: [String: UIColor] = [
+            "White": .white,
+            "Red": .red,
+            "Blue": .blue,
+            "Green": .green,
+            "Orange": .orange,
+            "Magenta": .magenta,
+            "Indigo": .systemIndigo,
+            "Mint": .systemMint
+        ]
+        
+        let defaults = UserDefaults.standard
+        if let color = defaults.object(forKey: "themeColor") as? String {
+            self.themeColor = colorDict[color]
+        } else {
+            self.themeColor = .green
+        }
+    }
+    
+    @objc private func chooseThemeColor() {
+        let ac = UIAlertController(title: "Choose color", message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "White", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .white
+            self?.saveTheColor(color: "White")
+        }))
+        ac.addAction(UIAlertAction(title: "Red", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .red
+            self?.saveTheColor(color: "Red")
+        }))
+        ac.addAction(UIAlertAction(title: "Blue", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .blue
+            self?.saveTheColor(color: "Blue")
+        }))
+        ac.addAction(UIAlertAction(title: "Green", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .green
+            self?.saveTheColor(color: "Green")
+        }))
+        ac.addAction(UIAlertAction(title: "Orange", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .orange
+            self?.saveTheColor(color: "Orange")
+        }))
+        ac.addAction(UIAlertAction(title: "Magenta", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .magenta
+            self?.saveTheColor(color: "Magenta")
+        }))
+        ac.addAction(UIAlertAction(title: "Indigo", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .systemIndigo
+            self?.saveTheColor(color: "Indigo")
+        }))
+        ac.addAction(UIAlertAction(title: "Mint", style: .default, handler: { [weak self] _ in
+            self?.themeColor = .systemMint
+            self?.saveTheColor(color: "Mint")
+        }))
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+    
+    private func saveTheColor(color: String) {
+        let defaults = UserDefaults.standard
+        defaults.set(color, forKey: "themeColor")
     }
     
     private func parseJSON() {
@@ -73,8 +157,7 @@ extension TableViewController {
             if let data = try? Data(contentsOf: furl) {
                 let decoder = JSONDecoder()
                 if let jsonNotes = try? decoder.decode([Note].self, from: data) {
-                    notes = jsonNotes 
-                    print("Все четко")
+                    notes = jsonNotes
                 }
             }
         } catch {
@@ -110,8 +193,6 @@ extension TableViewController {
                     .appendingPathComponent("notesInfo")
                     .appendingPathExtension("json")
                 try savedData.write(to: furl)
-                print("Все ок")
-                print(furl)
             } catch {
                 print(error)
             }
