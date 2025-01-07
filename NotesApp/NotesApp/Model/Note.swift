@@ -7,6 +7,8 @@
 
 import Foundation
 
+
+// MARK: Note struct — to save your notes into JSON and read from JSON
 struct Note: Codable {
     var title: String
     var body: String
