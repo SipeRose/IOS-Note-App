@@ -44,7 +44,9 @@ It is a prototype of the Notes application, redesigned for my own use.
 
 ## Technologies
  * UIKit
+ * MVC Architecture
  * Notification Center
  * UserDefaults
  * Working with JSON
  * Gesture Recognizers
+ * UUID
